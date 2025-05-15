@@ -7,10 +7,12 @@ import {
   Button,
   KeyboardAvoidingView,
   Platform,
+  Modal,
 } from "react-native";
 // import { RadioButton } from "react-native-paper";
 import { useState } from "react";
 import RadioButton from "../Components/RadioButton";
+import { registerApi } from "../api/registerApi";
 
 function clearError(setError) {
   setError({
@@ -27,11 +29,14 @@ function clearError(setError) {
     country: "",
     zipCode: "",
     dateOfBirth: "",
+    commonError: "",
   });
 }
 function validateForm(formData, setError) {
   clearError(setError);
+  var isValid = true;
   if (!formData.firstName) {
+    isValid = false;
     setError((prev) => ({
       ...prev,
       firstName: "First name is required",
@@ -44,6 +49,7 @@ function validateForm(formData, setError) {
     }));
   }
   if (!formData.gender) {
+    isValid = false;
     setError((prev) => ({
       ...prev,
       gender: "Gender is required",
@@ -56,6 +62,7 @@ function validateForm(formData, setError) {
     emailError = "Email address is invalid";
   }
   if (emailError) {
+    isValid = false;
     setError((prev) => ({
       ...prev,
       email: emailError,
@@ -68,6 +75,7 @@ function validateForm(formData, setError) {
     passwordError = "Password must be at least 6 characters";
   }
   if (passwordError) {
+    isValid = false;
     setError((prev) => ({
       ...prev,
       password: passwordError,
@@ -80,6 +88,7 @@ function validateForm(formData, setError) {
     confirmPasswordError = "Passwords do not match";
   }
   if (confirmPasswordError) {
+    isValid = false;
     setError((prev) => ({
       ...prev,
       confirmPassword: confirmPasswordError,
@@ -92,6 +101,7 @@ function validateForm(formData, setError) {
     phoneNumberError = "Phone number must be 10 digits";
   }
   if (phoneNumberError) {
+    isValid = false;
     setError((prev) => ({
       ...prev,
       phoneNumber: phoneNumberError,
@@ -102,6 +112,7 @@ function validateForm(formData, setError) {
     addressError = "Address is required";
   }
   if (addressError) {
+    isValid = false;
     setError((prev) => ({
       ...prev,
       address: addressError,
@@ -112,6 +123,7 @@ function validateForm(formData, setError) {
     cityError = "City is required";
   }
   if (cityError) {
+    isValid = false;
     setError((prev) => ({
       ...prev,
       city: cityError,
@@ -122,6 +134,7 @@ function validateForm(formData, setError) {
     stateError = "State is required";
   }
   if (stateError) {
+    isValid = false;
     setError((prev) => ({
       ...prev,
       state: stateError,
@@ -132,6 +145,7 @@ function validateForm(formData, setError) {
     countryError = "Country is required";
   }
   if (countryError) {
+    isValid = false;
     setError((prev) => ({
       ...prev,
       country: countryError,
@@ -145,6 +159,7 @@ function validateForm(formData, setError) {
   //     zipCodeError = "Zip code must be 5 digits";
   //   }
   if (zipCodeError) {
+    isValid = false;
     setError((prev) => ({
       ...prev,
       zipCode: zipCodeError,
@@ -157,12 +172,31 @@ function validateForm(formData, setError) {
     dateOfBirthError = "Date of birth must be in YYYY-MM-DD format";
   }
   if (dateOfBirthError) {
+    isValid = false;
     setError((prev) => ({
       ...prev,
       dateOfBirth: dateOfBirthError,
     }));
   }
+  return isValid;
 }
+
+async function submitForm(formData, setError, setModalVisible) {
+  if (validateForm(formData, setError)) {
+    console.log("Form is valid");
+    console.log("Form data:", formData);
+    try {
+      const response = await registerApi(formData);
+      setModalVisible(true);
+    } catch (error) {
+      setError((prev) => ({
+        ...prev,
+        commonError: "Email already exists",
+      }));
+    }
+  }
+}
+
 export default function RegistrationPage() {
   const [error, setError] = useState({
     firstName: "",
@@ -178,6 +212,7 @@ export default function RegistrationPage() {
     country: "",
     zipCode: "",
     dateOfBirth: "",
+    commonError: "",
   });
   const [formData, setFormData] = useState({
     firstName: "",
@@ -194,14 +229,33 @@ export default function RegistrationPage() {
     zipCode: "",
     dateOfBirth: "",
   });
+  const [modalVisible, setModalVisible] = useState(false);
+  const show = () => setModalVisible(true);
+  const hide = () => setModalVisible(false);
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.container}
     >
+      <Modal animationType="slide" visible={modalVisible} onRequestClose={hide}>
+        <View style={styles.modal}>
+          <Text style={styles.successText}>Successfully Registered!</Text>
+        </View>
+      </Modal>
       <ScrollView style={styles.scrollContainer}>
         <Text style={styles.title}>Registration Page</Text>
-        <Text></Text>
+        {error.commonError ? (
+          <Text
+            style={{
+              color: "red",
+              fontSize: 24,
+              fontWeight: "bold",
+              textAlign: "center",
+            }}
+          >
+            {error.commonError}
+          </Text>
+        ) : null}
         <View>
           <TextInput
             style={error.firstName === "" ? styles.input : styles.inputError}
@@ -391,7 +445,7 @@ export default function RegistrationPage() {
         <View>
           <Button
             title="Register"
-            onPress={() => validateForm(formData, setError)}
+            onPress={() => submitForm(formData, setError, setModalVisible)}
           />
         </View>
         <View style={{ padding: 30 }}></View>
@@ -404,6 +458,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: 50,
+  },
+  modal: {
+    flex: 1,
+  },
+  successText: {
+    fontSize: 24,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginTop: 50,
+    color: "green",
   },
   scrollContainer: {
     padding: 20,

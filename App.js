@@ -1,7 +1,6 @@
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View } from "react-native";
-import RegistrationPage from "./Pages/RegistrationPage";
-
+import RegistrationScreen from "./Screens/RegistrationScreen";
 export default function App() {
-  return <RegistrationPage />;
+  return <RegistrationScreen />;
 }
