@@ -23,8 +23,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   RadioButton: {
-    width: 30,
-    height: 30,
+    width: 20,
+    height: 20,
     borderRadius: 15,
     backgroundColor: "#fff",
     borderWidth: 2,
@@ -33,8 +33,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   SelectedButton: {
-    width: 20,
-    height: 20,
+    width: 10,
+    height: 10,
     borderRadius: 10,
     backgroundColor: "#000",
     alignItems: "center",

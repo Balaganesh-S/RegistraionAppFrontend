@@ -4,15 +4,25 @@ import {
   TextInput,
   StyleSheet,
   ScrollView,
-  Button,
   KeyboardAvoidingView,
   Platform,
   Modal,
+  Pressable,
 } from "react-native";
-// import { RadioButton } from "react-native-paper";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { Picker } from "@react-native-picker/picker";
 import { useState } from "react";
 import RadioButton from "../Components/RadioButton";
 import { registerApi } from "../api/registerApi";
+import Button from "../Components/Button";
+
+function formatDate(date) {
+  if (!date) return "";
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const day = date.getDate().toString().padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
 function clearError(setError) {
   setError({
@@ -166,13 +176,16 @@ function validateForm(formData, setError) {
     }));
   }
   let dateOfBirthError = "";
-  if (!formData.dateOfBirth) {
+  if (
+    !formData.dateOfBirth ||
+    !(formData.dateOfBirth instanceof Date) ||
+    isNaN(formData.dateOfBirth)
+  ) {
     dateOfBirthError = "Date of birth is required";
-  } else if (!/^\d{4}-\d{2}-\d{2}$/.test(formData.dateOfBirth)) {
-    dateOfBirthError = "Date of birth must be in YYYY-MM-DD format";
   }
+
   if (dateOfBirthError) {
-    isValid = false;
+    isValid = false; // Uncomment this line if you want to make dateOfBirth a required field
     setError((prev) => ({
       ...prev,
       dateOfBirth: dateOfBirthError,
@@ -181,13 +194,16 @@ function validateForm(formData, setError) {
   return isValid;
 }
 
-async function submitForm(formData, setError, setModalVisible) {
+async function submitForm(formData, setError, setModalVisible, navigation) {
   if (validateForm(formData, setError)) {
     console.log("Form is valid");
     console.log("Form data:", formData);
     try {
       const response = await registerApi(formData);
       setModalVisible(true);
+      setTimeout(() => {
+        navigation.navigate("Login");
+      }, 1000);
     } catch (error) {
       setError((prev) => ({
         ...prev,
@@ -197,7 +213,7 @@ async function submitForm(formData, setError, setModalVisible) {
   }
 }
 
-export default function RegistrationPage() {
+export default function RegistrationPage({ navigation }) {
   const [error, setError] = useState({
     firstName: "",
     lastName: "",
@@ -227,11 +243,23 @@ export default function RegistrationPage() {
     state: "",
     country: "",
     zipCode: "",
-    dateOfBirth: "",
+    dateOfBirth: null,
   });
   const [modalVisible, setModalVisible] = useState(false);
   const show = () => setModalVisible(true);
   const hide = () => setModalVisible(false);
+  const [showDate, setShowDate] = useState(false);
+
+  const onDateChange = (event, selectedDate) => {
+    setShowDate(Platform.OS === "ios"); // iOS: keep picker open after selection, Android: close
+    if (selectedDate) {
+      setFormData({
+        ...formData,
+        dateOfBirth: selectedDate,
+      });
+    }
+    console.log(formData.dateOfBirth);
+  };
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -266,7 +294,9 @@ export default function RegistrationPage() {
             placeholder="Enter your first name"
           />
           {error.firstName ? (
-            <Text style={{ color: "red" }}>{error.firstName}</Text>
+            <Text style={{ color: "red", marginLeft: 8 }}>
+              {error.firstName}
+            </Text>
           ) : null}
           <TextInput
             style={error.lastName === "" ? styles.input : styles.inputError}
@@ -277,7 +307,9 @@ export default function RegistrationPage() {
             placeholder="Enter your last name"
           />
           {error.lastName ? (
-            <Text style={{ color: "red" }}>{error.lastName}</Text>
+            <Text style={{ color: "red", marginLeft: 8 }}>
+              {error.lastName}
+            </Text>
           ) : null}
         </View>
         <View style={styles.genderContainer}>
@@ -294,7 +326,7 @@ export default function RegistrationPage() {
           {error.gender ? (
             <Text style={{ color: "red" }}>{error.gender}</Text>
           ) : null} */}
-          <Text style={{ fontSize: 16, fontWeight: "bold" }}>Gender</Text>
+          <Text style={{ fontSize: 16 }}>Gender</Text>
           <RadioButton
             label="Male"
             value="MALE"
@@ -315,54 +347,87 @@ export default function RegistrationPage() {
           />
         </View>
         {error.gender ? (
-          <Text style={{ color: "red" }}>{error.gender}</Text>
+          <Text style={{ color: "red", marginLeft: 8 }}>{error.gender}</Text>
         ) : null}
         <View>
-          <View>
-            <TextInput
-              style={error.email === "" ? styles.input : styles.inputError}
-              value={formData.email}
-              onChange={(e) => {
-                setFormData({ ...formData, email: e.nativeEvent.text });
-              }}
-              placeholder="Enter your email"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-            {error.email ? (
-              <Text style={{ color: "red" }}>{error.email}</Text>
-            ) : null}
-            <TextInput
-              style={error.password === "" ? styles.input : styles.inputError}
-              value={formData.password}
-              onChange={(e) => {
-                setFormData({ ...formData, password: e.nativeEvent.text });
-              }}
-              placeholder="Enter your password"
-              secureTextEntry={true}
-            />
-            {error.password ? (
-              <Text style={{ color: "red" }}>{error.password}</Text>
-            ) : null}
-            <TextInput
+          <Pressable
+            onPress={() => setShowDate(true)}
+            style={styles.datePickerButton}
+          >
+            <Text
               style={
-                error.confirmPassword === "" ? styles.input : styles.inputError
+                formData.dateOfBirth
+                  ? styles.datePickerText
+                  : [styles.datePickerText, { color: "gray" }]
               }
-              value={formData.confirmPassword}
-              onChange={(e) => {
-                setFormData({
-                  ...formData,
-                  confirmPassword: e.nativeEvent.text,
-                });
-              }}
-              placeholder="Confirm your password"
-              secureTextEntry={true}
+            >
+              {formData.dateOfBirth
+                ? formatDate(formData.dateOfBirth)
+                : "Select Date of Birth"}
+            </Text>
+          </Pressable>
+          {showDate && (
+            <DateTimePicker
+              value={formData.dateOfBirth || new Date()}
+              mode="date"
+              display="spinner"
+              onChange={onDateChange}
+              maximumDate={new Date()}
             />
-            {error.confirmPassword ? (
-              <Text style={{ color: "red" }}>{error.confirmPassword}</Text>
-            ) : null}
-          </View>
+          )}
+          {error.dateOfBirth ? (
+            <Text style={{ color: "red", marginLeft: 8 }}>
+              {error.dateOfBirth}
+            </Text>
+          ) : null}
+
+          <TextInput
+            style={error.email === "" ? styles.input : styles.inputError}
+            value={formData.email}
+            onChange={(e) => {
+              setFormData({ ...formData, email: e.nativeEvent.text });
+            }}
+            placeholder="Enter your email"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          {error.email ? (
+            <Text style={{ color: "red", marginLeft: 8 }}>{error.email}</Text>
+          ) : null}
+          <TextInput
+            style={error.password === "" ? styles.input : styles.inputError}
+            value={formData.password}
+            onChange={(e) => {
+              setFormData({ ...formData, password: e.nativeEvent.text });
+            }}
+            placeholder="Enter your password"
+            secureTextEntry={true}
+          />
+          {error.password ? (
+            <Text style={{ color: "red", marginLeft: 8 }}>
+              {error.password}
+            </Text>
+          ) : null}
+          <TextInput
+            style={
+              error.confirmPassword === "" ? styles.input : styles.inputError
+            }
+            value={formData.confirmPassword}
+            onChange={(e) => {
+              setFormData({
+                ...formData,
+                confirmPassword: e.nativeEvent.text,
+              });
+            }}
+            placeholder="Confirm your password"
+            secureTextEntry={true}
+          />
+          {error.confirmPassword ? (
+            <Text style={{ color: "red", marginLeft: 8 }}>
+              {error.confirmPassword}
+            </Text>
+          ) : null}
         </View>
         <View>
           <TextInput
@@ -374,10 +439,15 @@ export default function RegistrationPage() {
             placeholder="Enter your phone number"
           />
           {error.phoneNumber ? (
-            <Text style={{ color: "red" }}>{error.phoneNumber}</Text>
+            <Text style={{ color: "red", marginLeft: 8 }}>
+              {error.phoneNumber}
+            </Text>
           ) : null}
           <TextInput
-            style={error.address === "" ? styles.input : styles.inputError}
+            // style={error.address === "" ? styles.input : styles.inputError}
+            style={styles.textArea}
+            multiline={true}
+            numberOfLines={5}
             value={formData.address}
             onChange={(e) => {
               setFormData({ ...formData, address: e.nativeEvent.text });
@@ -385,7 +455,7 @@ export default function RegistrationPage() {
             placeholder="Enter your address"
           />
           {error.address ? (
-            <Text style={{ color: "red" }}>{error.address}</Text>
+            <Text style={{ color: "red", marginLeft: 8 }}>{error.address}</Text>
           ) : null}
           <TextInput
             style={error.city === "" ? styles.input : styles.inputError}
@@ -396,7 +466,7 @@ export default function RegistrationPage() {
             placeholder="Enter your city"
           />
           {error.city ? (
-            <Text style={{ color: "red" }}>{error.city}</Text>
+            <Text style={{ color: "red", marginLeft: 8 }}>{error.city}</Text>
           ) : null}
           <TextInput
             style={error.state === "" ? styles.input : styles.inputError}
@@ -407,18 +477,27 @@ export default function RegistrationPage() {
             placeholder="Enter your state"
           />
           {error.state ? (
-            <Text style={{ color: "red" }}>{error.state}</Text>
+            <Text style={{ color: "red", marginLeft: 8 }}>{error.state}</Text>
           ) : null}
-          <TextInput
-            style={error.country === "" ? styles.input : styles.inputError}
-            value={formData.country}
-            onChange={(e) => {
-              setFormData({ ...formData, country: e.nativeEvent.text });
-            }}
-            placeholder="Enter your country"
-          />
+
+          <View style={styles.pickerWrapper}>
+            <Picker
+              selectedValue={formData.country}
+              onValueChange={(itemValue, itemIndex) =>
+                setFormData({ ...formData, country: itemValue })
+              }
+              style={styles.picker}
+              dropdownIconColor="#000"
+            >
+              <Picker.Item label="select a country" value="" />
+              <Picker.Item label="India" value="India" />
+              <Picker.Item label="USA" value="USA" />
+              <Picker.Item label="Germany" value="Germany" />
+            </Picker>
+          </View>
+
           {error.country ? (
-            <Text style={{ color: "red" }}>{error.country}</Text>
+            <Text style={{ color: "red", marginLeft: 8 }}>{error.country}</Text>
           ) : null}
           <TextInput
             style={error.zipCode === "" ? styles.input : styles.inputError}
@@ -429,23 +508,17 @@ export default function RegistrationPage() {
             placeholder="Enter your zip code"
           />
           {error.zipCode ? (
-            <Text style={{ color: "red" }}>{error.zipCode}</Text>
-          ) : null}
-          <TextInput
-            style={error.dateOfBirth === "" ? styles.input : styles.inputError}
-            onChange={(e) => {
-              setFormData({ ...formData, dateOfBirth: e.nativeEvent.text });
-            }}
-            placeholder="Enter your date of birth"
-          />
-          {error.dateOfBirth ? (
-            <Text style={{ color: "red" }}>{error.dateOfBirth}</Text>
+            <Text style={{ color: "red", marginLeft: 8 }}>{error.zipCode}</Text>
           ) : null}
         </View>
-        <View>
+        <View style={styles.registorButton}>
           <Button
             title="Register"
-            onPress={() => submitForm(formData, setError, setModalVisible)}
+            onPress={() =>
+              submitForm(formData, setError, setModalVisible, navigation)
+            }
+            buttonStyle={styles.button}
+            buttonTextStyle={styles.buttonText}
           />
         </View>
         <View style={{ padding: 30 }}></View>
@@ -457,7 +530,8 @@ export default function RegistrationPage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 50,
+    paddingTop: 16,
+    backgroundColor: "white",
   },
   modal: {
     flex: 1,
@@ -470,33 +544,104 @@ const styles = StyleSheet.create({
     color: "green",
   },
   scrollContainer: {
-    padding: 20,
-    paddingBottom: 120,
+    padding: 16,
+    paddingBottom: 100, // Add padding to the bottom to avoid content being hidden by the keyboard
+    backgroundColor: "white",
   },
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    marginBottom: 20,
-    backgroundColor: "orange",
+    color: "black",
+    // backgroundColor: "orange",
+    alignItems: "center",
+    textAlign: "center",
     margin: 0,
     padding: 10,
   },
   input: {
+    height: 56,
     borderWidth: 1,
     borderColor: "black",
-    padding: 10,
-    marginBottom: 10,
+    padding: 8,
+    marginTop: 16,
+    borderRadius: 8,
+    fontSize: 16,
   },
   inputError: {
+    height: 56,
     borderWidth: 1,
     borderColor: "red",
-    padding: 10,
-    marginBottom: 10,
+    marginTop: 16,
+    padding: 8,
+    borderRadius: 8,
   },
   genderContainer: {
-    flexDirection: "column",
-    justifyContent: "space-between",
-    gap: 10,
-    marginBottom: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+    marginTop: 16,
+    marginLeft: 4,
+  },
+  pickerWrapper: {
+    borderWidth: 1,
+    borderColor: "black",
+    borderRadius: 8,
+    width: "100%",
+    // overflow: "hidden",
+    marginTop: 16,
+  },
+  picker: {
+    height: 56,
+    width: "100%",
+    color: "black",
+    borderRadius: 8,
+    backgroundColor: "transparent",
+    fontSize: 16,
+  },
+  textArea: {
+    height: 120,
+    borderColor: "black",
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 8,
+    textAlignVertical: "top",
+    marginTop: 16,
+    fontSize: 16,
+  },
+  datePickerButton: {
+    borderWidth: 1,
+    borderColor: "black",
+    padding: 8,
+    borderRadius: 8,
+    marginTop: 16,
+    height: 56,
+    justifyContent: "center", // vertically center the text
+  },
+
+  datePickerText: {
+    fontSize: 16,
+    color: "black", // default color
+  },
+  registorButton: {
+    marginTop: 16,
+  },
+  button: {
+    backgroundColor: "#007BFF",
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 2, // Android shadow
+    shadowColor: "#000", // iOS shadow
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
