@@ -2,6 +2,10 @@ import { View, Text, StyleSheet } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import React from "react";
 import HomeScreen from "../Screens/HomeScreen";
+import DateFilter from "./DateFilter";
+import GenderFilter from "./GenderFilter";
+import AgeFilter from "./AgeFilter";
+import SearchBar from "./SearchBar";
 
 const Stack = createNativeStackNavigator();
 
@@ -9,10 +13,25 @@ export default function BottomSheet() {
   return (
     <View style={styles.backdrop}>
       <View style={styles.BottomSheet}>
-        <Stack.Navigator initialRouteName="Home">
+        <Stack.Navigator initialRouteName="Search">
           <Stack.Screen
-            name="Home"
-            component={HomeScreen}
+            name="Date"
+            component={DateFilter}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="Gender"
+            component={GenderFilter}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="Age"
+            component={AgeFilter}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="Search"
+            component={SearchBar}
             options={{ headerShown: false }}
           />
         </Stack.Navigator>

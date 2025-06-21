@@ -258,7 +258,6 @@ export default function RegistrationPage({ navigation }) {
         dateOfBirth: selectedDate,
       });
     }
-    console.log(formData.dateOfBirth);
   };
   return (
     <KeyboardAvoidingView

@@ -2,6 +2,7 @@ import { View, Text, FlatList, StyleSheet } from "react-native";
 import { useState } from "react";
 import FilterButton from "../Components/FilterButton";
 import BottomSheet from "../Components/BottomSheet";
+import SearchBar from "../Components/SearchBar";
 
 export default function DashboardScreen() {
   const [filter, setFilter] = useState({
@@ -26,6 +27,7 @@ export default function DashboardScreen() {
 
   return (
     <View style={styles.screen}>
+      <SearchBar />
       <FlatList
         horizontal
         data={data}
