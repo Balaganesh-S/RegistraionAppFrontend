@@ -1,10 +1,23 @@
 import { View, Text, StyleSheet, TouchableWithoutFeedback } from "react-native";
 import React from "react";
 
-export default function FilterButton({ name }) {
+export default function FilterButton({
+  name,
+  id,
+  filter,
+  setCurrFilter,
+  setFilter,
+}) {
+  const handlePress = () => {
+    if (filter[name]) {
+      const currFilter = filter[name];
+      setFilter((prev) => ({ ...prev, [name]: null }));
+      setCurrFilter(0);
+    } else setCurrFilter(id);
+  };
   return (
-    <TouchableWithoutFeedback>
-      <View style={styles.selectedContainer}>
+    <TouchableWithoutFeedback onPress={handlePress}>
+      <View style={filter[name] ? styles.selectedContainer : styles.container}>
         <Text>{name}</Text>
       </View>
     </TouchableWithoutFeedback>

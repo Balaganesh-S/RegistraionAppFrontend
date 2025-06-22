@@ -6,7 +6,7 @@ import { Platform } from "react-native";
 const SliderWrapper = styled.View`
   margin: 20px;
   width: 280px;
-  height: 150px;
+  height: 100px;
   justify-content: center;
 `;
 

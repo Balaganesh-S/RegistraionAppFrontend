@@ -1,18 +1,24 @@
-import { View, Text, StyleSheet, Button } from "react-native";
-import Slider from "./Slider";
 import { useState } from "react";
+import Checkbox from "./Checkbox";
+import { View, StyleSheet, Text, Button } from "react-native";
 
-export default function AgeFilter({ setFilter, setCurrFilter }) {
-  const [ageRange, setAgeRange] = useState([16, 50]);
+const PlanFilter = ({ setFilter, setCurrFilter }) => {
+  const [selectedPlan, setSelectedPlan] = useState([]);
+  const addPlanInList = (value) => {
+    setSelectedPlan((prev) => [...prev, value]);
+  };
+  const removePlanFromList = (value) => {
+    setSelectedPlan((prev) => prev.filter((item) => item !== value));
+  };
   const handleApply = () => {
     setFilter((prev) => ({
       ...prev,
-      Age: { startAge: ageRange[0], endAge: ageRange[1] },
+      Plan: selectedPlan,
     }));
     setCurrFilter(0);
   };
   const handleCancel = () => {
-    setFilter((prev) => ({ ...prev, Age: null }));
+    setFilter((prev) => ({ ...prev, Plan: null }));
     setCurrFilter(0);
   };
   return (
@@ -20,11 +26,22 @@ export default function AgeFilter({ setFilter, setCurrFilter }) {
       <View style={styles.BottomSheet}>
         <View style={styles.container}>
           <Text style={{ fontSize: 18, marginBottom: 10 }}>
-            Select the age range{" "}
+            Select the plan
           </Text>
-          <Slider
-            multiSliderValue={ageRange}
-            setMultiSliderValue={setAgeRange}
+          <Checkbox
+            name="Platinum"
+            addInList={addPlanInList}
+            removeFromList={removePlanFromList}
+          />
+          <Checkbox
+            name="Gold"
+            addInList={addPlanInList}
+            removeFromList={removePlanFromList}
+          />
+          <Checkbox
+            name="Silver"
+            addInList={addPlanInList}
+            removeFromList={removePlanFromList}
           />
           <View style={styles.btnGroup}>
             <Button title="Apply" onPress={handleApply} color="#4CAF50" />
@@ -34,7 +51,7 @@ export default function AgeFilter({ setFilter, setCurrFilter }) {
       </View>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   backdrop: {
@@ -67,3 +84,5 @@ const styles = StyleSheet.create({
     gap: 12,
   },
 });
+
+export default PlanFilter;
