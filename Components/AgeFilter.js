@@ -53,6 +53,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     height: "40%",
+    zIndex: 1000,
   },
   container: {
     flex: 1,

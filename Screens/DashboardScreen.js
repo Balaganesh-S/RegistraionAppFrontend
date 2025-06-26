@@ -14,18 +14,32 @@ import DateFilter from "../Components/DateFilter";
 import GenderFilter from "../Components/GenderFilter";
 import PlanFilter from "../Components/PlanFilter";
 import Icon from "react-native-vector-icons/FontAwesome";
+import UserListScreen from "./UserListScreen";
+import { getUsersByQueryApi } from "../api/registerApi";
 
 export default function DashboardScreen({ navigation }) {
   const [currFilter, setCurrFilter] = useState(0);
   const [text, setText] = useState("");
+  const [searchText, setSearchText] = useState("");
   const [filter, setFilter] = useState({
     Gender: null,
     Date: null,
     Plan: null,
     Age: null,
   });
+  const [user, setUser] = useState([]);
+
   useEffect(() => {
-    console.log(filter);
+    const fetchData = async () => {
+      try {
+        const response = await getUsersByQueryApi(filter);
+        setUser(response);
+        // console.log("Fetched users:", response);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    };
+    fetchData();
   }, [filter]);
 
   // const setFilterValue = (filter, value) => {
@@ -54,25 +68,34 @@ export default function DashboardScreen({ navigation }) {
             style={{ marginLeft: 16 }}
           />
         </TouchableOpacity>
-        <SearchBar text={text} setText={setText} />
-        <Icon name="area-chart" size={30} color="black" />
+        <SearchBar setUser={setUser} />
+        <TouchableOpacity
+          onPress={() => {
+            navigation.navigate("AnalyticsChart");
+          }}
+        >
+          <Icon name="area-chart" size={30} color="black" />
+        </TouchableOpacity>
       </View>
-      <FlatList
-        horizontal
-        data={data}
-        renderItem={({ item }) => (
-          <FilterButton
-            name={item.title}
-            filter={filter}
-            setCurrFilter={setCurrFilter}
-            setFilter={setFilter}
-            id={item.id}
-          />
-        )}
-        keyExtractor={(item) => item.id}
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.listContent}
-      />
+      <View>
+        <FlatList
+          horizontal
+          data={data}
+          renderItem={({ item }) => (
+            <FilterButton
+              name={item.title}
+              filter={filter}
+              setCurrFilter={setCurrFilter}
+              setFilter={setFilter}
+              id={item.id}
+            />
+          )}
+          keyExtractor={(item) => item.id}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.listContent}
+        />
+      </View>
+
       {currFilter == 4 && (
         <AgeFilter setFilter={setFilter} setCurrFilter={setCurrFilter} />
       )}
@@ -85,14 +108,17 @@ export default function DashboardScreen({ navigation }) {
       {currFilter == 3 && (
         <PlanFilter setFilter={setFilter} setCurrFilter={setCurrFilter} />
       )}
+      <View style={styles.userList}>
+        <UserListScreen users={user} navigation={navigation} />
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   screen: {
-    flex: 1,
     backgroundColor: "#fff",
+    flex: 1,
   },
   listContent: {
     paddingHorizontal: 16,
@@ -106,5 +132,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
     marginBottom: 8,
+  },
+  userList: {
+    height: "100%",
+    backgroundColor: "#f6f6f6",
+    marginTop: 16,
   },
 });

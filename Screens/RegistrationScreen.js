@@ -15,6 +15,7 @@ import { useState } from "react";
 import RadioButton from "../Components/RadioButton";
 import { registerApi } from "../api/registerApi";
 import Button from "../Components/Button";
+import ProfileImageUpdater from "../Components/ProfileImageUpdater";
 
 function formatDate(date) {
   if (!date) return "";
@@ -243,12 +244,14 @@ export default function RegistrationPage({ navigation }) {
     state: "",
     country: "",
     zipCode: "",
+    imageUri: null,
     dateOfBirth: null,
   });
   const [modalVisible, setModalVisible] = useState(false);
   const show = () => setModalVisible(true);
   const hide = () => setModalVisible(false);
   const [showDate, setShowDate] = useState(false);
+  const [imageUri, setImageUri] = useState(null);
 
   const onDateChange = (event, selectedDate) => {
     setShowDate(Platform.OS === "ios"); // iOS: keep picker open after selection, Android: close
@@ -283,6 +286,7 @@ export default function RegistrationPage({ navigation }) {
             {error.commonError}
           </Text>
         ) : null}
+        <ProfileImageUpdater formData={formData} setFormData={setFormData} />
         <View>
           <TextInput
             style={error.firstName === "" ? styles.input : styles.inputError}

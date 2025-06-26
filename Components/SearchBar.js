@@ -1,8 +1,30 @@
-import { View, Text, StyleSheet, TextInput } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableWithoutFeedback,
+} from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
-import React from "react";
+import React, { useState } from "react";
+import { getUserByNameApi } from "../api/registerApi";
 
-export default function SearchBar({ text, setText }) {
+export default function SearchBar({ setUser }) {
+  const [text, setText] = useState("");
+  const handlePress = () => {
+    if (text.trim() === "") {
+      return; // Do nothing if the input is empty
+    }
+    getUserByNameApi(text)
+      .then((response) => {
+        setUser(response);
+        console.log("Fetched users:", response);
+      })
+      .catch((error) => {
+        console.error("Error fetching users:", error);
+      });
+    setText(""); // Clear the input after search
+  };
   return (
     <View style={styles.container}>
       <TextInput
@@ -12,9 +34,11 @@ export default function SearchBar({ text, setText }) {
         value={text}
         onChangeText={setText}
       />
-      <View style={styles.searchIcon}>
-        <Icon name="search" size={24} color="black" />
-      </View>
+      <TouchableWithoutFeedback onPress={handlePress}>
+        <View style={styles.searchIcon}>
+          <Icon name="search" size={24} color="black" />
+        </View>
+      </TouchableWithoutFeedback>
     </View>
   );
 }

@@ -28,7 +28,7 @@ export default function SubscriptionScreen() {
       <View style={styles.cardGroup}>
         <Text style={styles.title}>Select a Plan</Text>
         <Card
-          title="Platinum"
+          title="Premium"
           price={9999}
           month={12}
           setSubscription={setSubscription}
@@ -42,7 +42,7 @@ export default function SubscriptionScreen() {
           plan={plan}
         />
         <Card
-          title="Silver"
+          title="Basic"
           price={1499}
           month={1}
           setSubscription={setSubscription}
